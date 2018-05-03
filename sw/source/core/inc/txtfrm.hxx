@@ -331,10 +331,18 @@ public:
 
     /// Returns the text portion we want to edit (for inline see underneath)
     const OUString& GetText() const;
+#if 1
     SwTextNode *GetTextNode()
         { return static_cast< SwTextNode* >( SwContentFrame::GetNode()); }
     const SwTextNode *GetTextNode() const
         { return static_cast< const SwTextNode* >( SwContentFrame::GetNode()); }
+public:
+#endif
+    SwTextNode const* GetTextNodeForParaProps() const;
+    SwTextNode      * GetTextNodeFirst()
+        { return const_cast<SwTextNode*>(const_cast<SwTextFrame const*>(this)->GetTextNodeFirst()); };
+    SwTextNode const* GetTextNodeFirst() const;
+    SwDoc const& GetDoc() const;
 
     SwTextFrame(SwTextNode * const, SwFrame* );
 
