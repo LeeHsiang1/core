@@ -112,7 +112,7 @@ public:
     bool Seek( const sal_Int32 nPos );
     // Creates the font at the specified position via Seek() and checks
     // if it's a symbol font.
-    bool IsSymbol( const sal_Int32 nPos );
+    bool IsSymbol(TextFrameIndex nPos);
 
     /** Executes ChgPhysFnt if Seek() returns true
      *  and change font to merge character border with neighbours.

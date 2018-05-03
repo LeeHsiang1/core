@@ -133,7 +133,7 @@ bool SwAttrIter::SeekAndChgAttrIter(TextFrameIndex const nNewPos, OutputDevice* 
     return bChg;
 }
 
-bool SwAttrIter::IsSymbol( const sal_Int32 nNewPos )
+bool SwAttrIter::IsSymbol(TextFrameIndex const nNewPos)
 {
     Seek( nNewPos );
     if ( !m_nChgCnt && !m_nPropFont )
