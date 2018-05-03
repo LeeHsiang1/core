@@ -760,7 +760,7 @@ void SwTaggedPDFHelper::SetAttributes( vcl::PDFWriter::StructElement eType )
             if (pPor->GetWhichPor() == POR_SOFTHYPH || pPor->GetWhichPor() == POR_HYPH)
                 aActualText = OUString(u'\x00ad'); // soft hyphen
             else
-                aActualText = rInf.GetText().copy(rInf.GetIdx(), pPor->GetLen());
+                aActualText = rInf.GetText().copy(rInf.GetIdx(), sal_Int32(pPor->GetLen()));
             mpPDFExtOutDevData->SetActualText( aActualText );
         }
 
