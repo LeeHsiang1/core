@@ -112,7 +112,7 @@ SwTextAttr *SwAttrIter::GetAttr( const sal_Int32 nPosition ) const
     return (m_pTextNode) ? m_pTextNode->GetTextAttrForCharAt(nPosition) : nullptr;
 }
 
-bool SwAttrIter::SeekAndChgAttrIter( const sal_Int32 nNewPos, OutputDevice* pOut )
+bool SwAttrIter::SeekAndChgAttrIter(TextFrameIndex const nNewPos, OutputDevice* pOut)
 {
     bool bChg = m_nStartIndex && nNewPos == m_nPosition ? m_pFont->IsFntChg() : Seek( nNewPos );
     if ( m_pLastOut.get() != pOut )
