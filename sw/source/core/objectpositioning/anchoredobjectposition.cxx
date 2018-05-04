@@ -947,7 +947,7 @@ SwTwips SwAnchoredObjectPosition::AdjustHoriRelPosForDrawAside(
     const sal_uInt32 nObjOrdNum = GetObject().GetOrdNum();
     const SwPageFrame* pObjPage = rFlyAtContentFrame.FindPageFrame();
     const SwFrame* pObjContext = ::FindContext( &rAnchorTextFrame, SwFrameType::Column );
-    sal_uLong nObjIndex = rAnchorTextFrame.GetTextNode()->GetIndex();
+    sal_uLong nObjIndex = rAnchorTextFrame.GetTextNodeFirst()->GetIndex();
     SwOrderIter aIter( pObjPage );
     const SwFlyFrame* pFly = static_cast<const SwVirtFlyDrawObj*>(aIter.Bottom())->GetFlyFrame();
     while ( pFly && nObjOrdNum > pFly->GetVirtDrawObj()->GetOrdNumDirect() )
@@ -1058,7 +1058,8 @@ bool SwAnchoredObjectPosition::DrawAsideFly( const SwFlyFrame* _pFly,
          ::FindContext( _pFly->GetAnchorFrame(), SwFrameType::Column ) == _pObjContext )
     {
         sal_uLong nOtherIndex =
-            static_cast<const SwTextFrame*>(_pFly->GetAnchorFrame())->GetTextNode()->GetIndex();
+            static_cast<const SwTextFrame*>(_pFly->GetAnchorFrame())->GetTextNodeFirst()->GetIndex();
+        // sw_redlinehide: this is used for comparing, so just use the first
         if( _nObjIndex >= nOtherIndex )
         {
             const SwFormatHoriOrient& rHori = _pFly->GetFormat()->GetHoriOrient();
