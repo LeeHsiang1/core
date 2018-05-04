@@ -107,7 +107,7 @@ SwAttrIter::~SwAttrIter()
  * The Formatter later on encounters such a special character and retrieves the
  * degenerate attribute via GetAttr().
  */
-SwTextAttr *SwAttrIter::GetAttr( const sal_Int32 nPosition ) const
+SwTextAttr *SwAttrIter::GetAttr(TextFrameIndex const nPosition) const
 {
     return (m_pTextNode) ? m_pTextNode->GetTextAttrForCharAt(nPosition) : nullptr;
 }

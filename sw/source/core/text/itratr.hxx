@@ -124,7 +124,7 @@ public:
     bool HasHints() const { return nullptr != m_pHints; }
 
     // Returns the attribute for a position
-    SwTextAttr *GetAttr( const sal_Int32 nPos ) const;
+    SwTextAttr *GetAttr(TextFrameIndex nPos) const;
 
     const SwpHints *GetHints() const { return m_pHints; }
 
