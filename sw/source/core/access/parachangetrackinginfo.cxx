@@ -40,12 +40,14 @@ namespace {
         opChangeTrackDeletionTextMarkupList = new SwWrongList( WRONGLIST_CHANGETRACKING );
         opChangeTrackFormatChangeTextMarkupList = new SwWrongList( WRONGLIST_CHANGETRACKING );
 
-        if ( !rTextFrame.GetTextNode() )
+        if (!rTextFrame.GetTextNodeFirst())
         {
             OSL_FAIL( "<initChangeTrackTextMarkupLists(..) - missing <SwTextNode> instance!" );
             return;
         }
-        const SwTextNode& rTextNode( *(rTextFrame.GetTextNode()) );
+        // sw_redlinehide: the first node is sufficient - there are only
+        // multiple ones in !Show case and the code below returns early then
+        const SwTextNode& rTextNode(*(rTextFrame.GetTextNodeFirst()));
 
         const IDocumentRedlineAccess& rIDocChangeTrack( rTextNode.getIDocumentRedlineAccess() );
 
@@ -64,12 +66,14 @@ namespace {
             return;
         }
 
+        // sw_redlinehide: rely on the !Show early return above & cast
+        // TextFrameIndex to SwIndex directly
         const sal_Int32 nTextFrameTextStartPos = rTextFrame.IsFollow()
-                                               ? rTextFrame.GetOfst()
-                                               : 0;
+            ? sal_Int32(rTextFrame.GetOfst())
+            : 0;
         const sal_Int32 nTextFrameTextEndPos = rTextFrame.HasFollow()
-                                             ? rTextFrame.GetFollow()->GetOfst()
-                                             : rTextFrame.GetText().getLength();
+            ? sal_Int32(rTextFrame.GetFollow()->GetOfst())
+            : rTextFrame.GetText().getLength();
 
         // iteration over the redlines which overlap with the text node.
         const SwRedlineTable& rRedlineTable = rIDocChangeTrack.GetRedlineTable();
