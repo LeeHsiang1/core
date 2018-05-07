@@ -466,11 +466,9 @@ SwPosition SwTextFrame::MapViewToModelPos(TextFrameIndex const nIndex) const
     return SwPosition(*ret.first, ret.second);
 }
 
-TextFrameIndex SwTextFrame::MapModelToViewPos(SwPosition const& rPos) const
+TextFrameIndex SwTextFrame::MapModelToView(SwTextNode const*const pNode, sal_Int32 nIndex) const
 {
     sal_Int32 nRet(0);
-    SwTextNode const*const pNode(rPos.nNode.GetNode().GetTextNode());
-    sal_Int32 const nIndex(rPos.nContent.GetIndex());
 //nope    assert(GetPara());
     sw::MergedPara const*const pMerged(GetMergedPara());
     if (pMerged)
@@ -506,6 +504,13 @@ TextFrameIndex SwTextFrame::MapModelToViewPos(SwPosition const& rPos) const
         assert(static_cast<SwTextNode*>(const_cast<SwContentNode*>(SwContentFrame::GetNode())) == pNode);
         return TextFrameIndex(nIndex);
     }
+}
+
+TextFrameIndex SwTextFrame::MapModelToViewPos(SwPosition const& rPos) const
+{
+    SwTextNode const*const pNode(rPos.nNode.GetNode().GetTextNode());
+    sal_Int32 const nIndex(rPos.nContent.GetIndex());
+    return MapModelToView(pNode, nIndex);
 }
 
 const OUString& SwTextFrame::GetText() const
