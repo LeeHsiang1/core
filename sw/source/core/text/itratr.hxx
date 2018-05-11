@@ -107,7 +107,7 @@ public:
     SwRedlineItr *GetRedln() { return m_pRedline; }
     // The parameter returns the position of the next change before or at the
     // char position.
-    sal_Int32 GetNextAttr( ) const;
+    TextFrameIndex GetNextAttr() const;
     /// Enables the attributes used at char pos nPos in the logical font
     bool Seek(TextFrameIndex nPos);
     // Creates the font at the specified position via Seek() and checks

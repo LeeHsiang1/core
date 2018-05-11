@@ -239,7 +239,7 @@ void SwAttrIter::SeekFwd( const sal_Int32 nNewPos )
 
 }
 
-bool SwAttrIter::Seek( const sal_Int32 nNewPos )
+bool SwAttrIter::Seek(TextFrameIndex const nNewPos)
 {
     if ( m_pRedline && m_pRedline->ExtOn() )
         m_pRedline->LeaveExtend( *m_pFont, nNewPos );
