@@ -578,7 +578,7 @@ static sal_Int32 GetNextAttrImpl(SwTextNode const*const pTextNode,
     return nNext;
 }
 
-sal_Int32 SwAttrIter::GetNextAttr() const
+TextFrameIndex SwAttrIter::GetNextAttr() const
 {
     size_t nStartIndex(m_nStartIndex);
     size_t nEndIndex(m_nEndIndex);

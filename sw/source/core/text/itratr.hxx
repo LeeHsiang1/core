@@ -109,7 +109,7 @@ public:
     // char position.
     sal_Int32 GetNextAttr( ) const;
     /// Enables the attributes used at char pos nPos in the logical font
-    bool Seek( const sal_Int32 nPos );
+    bool Seek(TextFrameIndex nPos);
     // Creates the font at the specified position via Seek() and checks
     // if it's a symbol font.
     bool IsSymbol(TextFrameIndex nPos);
