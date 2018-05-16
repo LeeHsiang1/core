@@ -95,6 +95,11 @@ SwAttrIter::~SwAttrIter()
     delete m_pFont;
 }
 
+bool SwAttrIter::MaybeHasHints() const
+{
+    return nullptr != m_pTextNode->GetpSwpHints() || nullptr != m_pMergedPara;
+}
+
 /**
  * Returns the attribute for a position
  *
