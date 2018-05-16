@@ -906,6 +906,14 @@ public:
     SwTextAttr const* NextAttr(SwTextNode const** ppNode = nullptr);
 };
 
+class MergedAttrIterByEnd
+    : public MergedAttrIterBase
+{
+public:
+    MergedAttrIterByEnd(SwTextFrame const& rFrame) : MergedAttrIterBase(rFrame) {}
+    SwTextAttr const* NextAttr(SwTextNode const** ppNode = nullptr);
+};
+
 class MergedAttrIterReverse
     : public MergedAttrIterBase
 {
