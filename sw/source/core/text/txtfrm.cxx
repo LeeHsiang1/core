@@ -378,7 +378,7 @@ SwTextFrame::SwTextFrame(SwTextNode * const pNode, SwFrame* pSib )
     , mnFootnoteLine( 0 )
     , mnHeightOfLastLine( 0 )
     , mnAdditionalFirstLineOffset( 0 )
-    , m_pMergedPara(CheckParaRedlineMerge(*pNode)) // ensure this is inited
+    , m_pMergedPara(CheckParaRedlineMerge(this, *pNode)) // ensure it is inited
     , mnOffset( 0 )
     , mnCacheIndex( USHRT_MAX )
     , mbLocked( false )
