@@ -46,10 +46,11 @@ using namespace ::com::sun::star;
 
 namespace sw {
 
-std::unique_ptr<sw::MergedPara> CheckParaRedlineMerge(SwTextNode & rTextNode)
+std::unique_ptr<sw::MergedPara>
+CheckParaRedlineMerge(SwTextFrame const*const pFrame, SwTextNode & rTextNode)
 {
     IDocumentRedlineAccess const& rIDRA = rTextNode.getIDocumentRedlineAccess();
-    if (IDocumentRedlineAccess::IsShowChanges(rIDRA.GetRedlineFlags()))
+    if (!pFrame->getRootFrame()->IsHideRedlines())
     {
         return nullptr;
     }

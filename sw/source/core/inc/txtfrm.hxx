@@ -79,7 +79,7 @@ struct MergedPara
     }
 };
 
-std::unique_ptr<sw::MergedPara> CheckParaRedlineMerge(SwTextNode & rTextNode);
+std::unique_ptr<sw::MergedPara> CheckParaRedlineMerge(SwTextFrame const* pFrame, SwTextNode & rTextNode);
 
 } // namespace sw
 
