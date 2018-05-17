@@ -441,16 +441,20 @@ std::pair<SwTextNode*, sal_Int32>
 MapViewToModel(MergedPara const& rMerged, TextFrameIndex const i_nIndex)
 {
     sal_Int32 nIndex(i_nIndex);
-    for (auto const& e : rMerged.extents)
+    sw::Extent const* pExtent(nullptr);
+    for (auto it = rMerged.extents.begin(); it != rMerged.extents.end(); ++it)
     {
-        if (nIndex < (e.nEnd - e.nStart))
+        pExtent = &*it;
+        if (nIndex < (pExtent->nEnd - pExtent->nStart))
         {
-            return std::make_pair(e.pNode, e.nStart + nIndex);
+            return std::make_pair(pExtent->pNode, pExtent->nStart + nIndex);
         }
-        nIndex = nIndex - (e.nEnd - e.nStart);
+        nIndex = nIndex - (pExtent->nEnd - pExtent->nStart);
     }
     assert(nIndex == 0 && "view index out of bounds");
-    return std::make_pair(rMerged.pFirstNode, 0);
+    return pExtent
+        ? std::make_pair(pExtent->pNode, pExtent->nEnd) //1-past-the-end index
+        : std::make_pair(rMerged.pFirstNode, 0);
 }
 
 TextFrameIndex MapModelToView(MergedPara const& rMerged, SwTextNode const*const pNode, sal_Int32 const nIndex)
@@ -465,7 +469,7 @@ TextFrameIndex MapModelToView(MergedPara const& rMerged, SwTextNode const*const 
             {
                 return TextFrameIndex(nRet + (nIndex - e.nStart));
             }
-            else if (e.nEnd < nIndex)
+            else if (nIndex < e.nStart)
             {
                 // in gap before this extent => map to 0 here TODO???
                 return TextFrameIndex(nRet);
@@ -474,11 +478,15 @@ TextFrameIndex MapModelToView(MergedPara const& rMerged, SwTextNode const*const 
         }
         else if (bFoundNode)
         {
-            // must be in a gap at the end of the node
-            assert(nIndex <= pNode->Len());
-            return TextFrameIndex(nRet);
+            break;
         }
         nRet += e.nEnd - e.nStart;
+    }
+    if (bFoundNode)
+    {
+        // must be in a gap at the end of the node
+        assert(nIndex <= pNode->Len());
+        return TextFrameIndex(nRet);
     }
     assert(!"text node not found");
 }
