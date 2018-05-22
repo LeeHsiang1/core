@@ -1992,7 +1992,7 @@ Size SwFntObj::GetTextSize( SwDrawTextInfo& rInf )
     return aTextSize;
 }
 
-sal_Int32 SwFntObj::GetCursorOfst( SwDrawTextInfo &rInf )
+TextFrameIndex SwFntObj::GetCursorOfst(SwDrawTextInfo &rInf)
 {
     long nSpaceAdd =       rInf.GetSpace() / SPACING_PRECISION_FACTOR;
     const long nSperren = -rInf.GetSperren() / SPACING_PRECISION_FACTOR;
