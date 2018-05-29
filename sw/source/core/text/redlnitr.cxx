@@ -47,14 +47,15 @@ using namespace ::com::sun::star;
 namespace sw {
 
 std::unique_ptr<sw::MergedPara>
-CheckParaRedlineMerge(SwTextFrame const*const pFrame, SwTextNode & rTextNode)
+CheckParaRedlineMerge(SwTextFrame & rFrame, SwTextNode & rTextNode)
 {
     IDocumentRedlineAccess const& rIDRA = rTextNode.getIDocumentRedlineAccess();
-    if (!pFrame->getRootFrame()->IsHideRedlines())
+    if (!rFrame.getRootFrame()->IsHideRedlines())
     {
         return nullptr;
     }
     bool bHaveRedlines(false);
+    std::vector<SwTextNode *> nodes{ &rTextNode };
     std::vector<sw::Extent> extents;
     OUStringBuffer mergedText;
     SwTextNode const* pParaPropsNode(nullptr);
@@ -92,6 +93,7 @@ CheckParaRedlineMerge(SwTextFrame const*const pFrame, SwTextNode & rTextNode)
             }
             pNode = pEnd->nNode.GetNode().GetTextNode();
             assert(pNode);
+            nodes.push_back(pNode);
             pNode->SetRedlineMergeFlag(SwNode::Merge::NonFirst);
         }
         nLastEnd = pEnd->nContent.GetIndex();
@@ -115,8 +117,13 @@ CheckParaRedlineMerge(SwTextFrame const*const pFrame, SwTextNode & rTextNode)
         assert(!mergedText.isEmpty());
         pParaPropsNode = extents.begin()->pNode; // para props from first node that isn't empty
     }
-    return o3tl::make_unique<sw::MergedPara>(std::move(extents),
-            mergedText.makeStringAndClear(), pParaPropsNode, &rTextNode);
+    auto pRet(o3tl::make_unique<sw::MergedPara>(rFrame, std::move(extents),
+                mergedText.makeStringAndClear(), pParaPropsNode, &rTextNode));
+    for (SwTextNode * pTmp : nodes)
+    {
+        pRet->listener.StartListening(pTmp);
+    }
+    return pRet;
 }
 
 } // namespace sw

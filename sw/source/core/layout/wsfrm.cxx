@@ -4173,7 +4173,7 @@ void SwRootFrame::SetHideRedlines(bool const bHideRedlines)
                 {
                     if (mbHideRedlines && pNode->IsCreateFrameWhenHidingRedlines())
                     {
-                        pFrame->SetMergedPara(CheckParaRedlineMerge(pFrame, rTextNode));
+                        pFrame->SetMergedPara(CheckParaRedlineMerge(*pFrame, rTextNode));
                     }
                     else
                     {
