@@ -1391,7 +1391,9 @@ SwTwips SwTextNode::GetWidthOfLeadingTabs() const
         for( SwTextFrame* pFrame = aIter.First(); pFrame; pFrame = aIter.Next() )
         {
             // Only consider master frames:
-            if ( !pFrame->IsFollow() )
+            if (!pFrame->IsFollow() &&
+                // sw_redlinehide: paraPropsNode has the first text of the frame
+                (!pFrame->GetMergedPara() || pFrame->GetMergedPara()->pParaPropsNode == this))
             {
                 SwRectFnSet aRectFnSet(pFrame);
                 SwRect aRect;
