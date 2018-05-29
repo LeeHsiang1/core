@@ -1671,7 +1671,7 @@ void SwRangeRedline::MoveFromSection(size_t nMyPos)
         {
             if (SwTextNode const*const pNode = node.GetNode().GetTextNode())
             {
-                SwIterator<SwTextFrame,SwTextNode> aIter(*pNode);
+                SwIterator<SwTextFrame, SwTextNode, sw::IteratorMode::UnwrapMulti> aIter(*pNode);
                 for (SwTextFrame* pFrame = aIter.First(); pFrame; pFrame = aIter.Next())
                 {
                     pFrame->SetMergedPara(nullptr);
