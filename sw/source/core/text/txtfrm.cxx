@@ -639,6 +639,115 @@ SwTextFrame::~SwTextFrame()
 
 namespace sw {
 
+void UpdateMergedParaForInsert(MergedPara & rMerged,
+        SwTextNode const& rNode, sal_Int32 const nIndex, sal_Int32 const nLen)
+{
+    assert(nIndex <= rNode.Len());
+    assert(nIndex + nLen <= rNode.Len());
+    OUStringBuffer text(rMerged.mergedText);
+    sal_Int32 nTFIndex(0);
+    bool bInserted(false);
+    bool bFoundNode(false);
+    auto it = rMerged.extents.begin();
+    for (; it != rMerged.extents.end(); ++it)
+    {
+        if (it->pNode == &rNode)
+        {
+            if (it->nStart <= nIndex && nIndex <= it->nEnd)
+            {   // note: this can happen only once
+                it->nEnd += nLen;
+                text.insert(nTFIndex + (nIndex - it->nStart),
+                        rNode.GetText().copy(nIndex, nLen));
+                bInserted = true;
+            }
+            else if (nIndex < it->nStart)
+            {
+                it->nStart += nLen;
+                it->nEnd += nLen;
+            }
+            bFoundNode = true;
+        }
+        else if (bFoundNode)
+        {
+            break;
+        }
+        nTFIndex += it->nEnd - it->nStart;
+    }
+    assert(bFoundNode && "text node not found - why is it sending hints to us");
+    if (!bInserted)
+    {   // must be in a gap at the end of the node
+        rMerged.extents.emplace(it, const_cast<SwTextNode*>(&rNode), nIndex, nIndex + nLen);
+        text.insert(nTFIndex, rNode.GetText().copy(nIndex, nLen));
+    }
+    rMerged.mergedText = text.makeStringAndClear();
+}
+
+bool UpdateMergedParaForDelete(MergedPara & rMerged,
+        SwTextNode const& rNode, sal_Int32 nIndex, sal_Int32 nLen)
+{
+    assert(nIndex <= rNode.Len());
+    OUStringBuffer text(rMerged.mergedText);
+    sal_Int32 nTFIndex(0);
+    sal_Int32 nDeleted(0);
+    bool bFoundNode(false);
+    auto it = rMerged.extents.begin();
+    for (; it != rMerged.extents.end(); ++it)
+    {
+        if (it->pNode == &rNode)
+        {
+            if (nIndex + nLen <= it->nStart)
+            {
+                nLen = 0;
+                it->nStart -= nDeleted;
+                it->nEnd -= nDeleted;
+            }
+            else
+            {
+                if (nIndex < it->nStart)
+                {
+                    // do not adjust nIndex into the text frame index space!
+                    nLen -= it->nStart - nIndex;
+                    nIndex = it->nStart;
+                    // note: continue with the if check below, no else!
+                }
+                if (it->nStart <= nIndex && nIndex < it->nEnd)
+                {
+                    sal_Int32 const nDeleteHere(nIndex + nLen <= it->nEnd
+                            ? nLen
+                            : it->nEnd - nIndex);
+                    if (nDeleteHere == it->nEnd - it->nStart)
+                    {
+                        assert(it->nStart == nIndex);
+                        rMerged.extents.erase(it);
+                    }
+                    else
+                    {
+                        it->nStart -= nDeleted;
+                        it->nEnd -= (nDeleted + nDeleteHere);
+                    }
+                    text.remove(nTFIndex + (nIndex - it->nStart), nDeleteHere);
+                    nDeleted += nDeleteHere;
+                    nLen -= nDeleteHere;
+                    nIndex += nDeleteHere;
+                }
+            }
+            bFoundNode = true;
+        }
+        else if (bFoundNode)
+        {
+            break;
+        }
+        nTFIndex += it->nEnd - it->nStart;
+    }
+    assert(bFoundNode && "text node not found - why is it sending hints to us");
+    assert(nIndex <= rNode.Len());
+    --it; // last one in paragraph - must be valid
+    // if there's a remaining deletion, it must be in gap at the end of the node
+    assert(nLen == 0 || it->nEnd <= nIndex);
+    rMerged.mergedText = text.makeStringAndClear();
+    return nDeleted != 0;
+}
+
 std::pair<SwTextNode*, sal_Int32>
 MapViewToModel(MergedPara const& rMerged, TextFrameIndex const i_nIndex)
 {
@@ -1277,6 +1386,7 @@ void SwTextFrame::SwClientNotify(SwModify const& rModify, SfxHint const& rHint)
 
     SfxPoolItem const*const pOld(pHint->m_pOld);
     SfxPoolItem const*const pNew(pHint->m_pNew);
+    SwTextNode const& rNode(static_cast<SwTextNode const&>(rModify));
 
 #if 1
     if (m_pMergedPara)
@@ -1360,6 +1470,10 @@ void SwTextFrame::SwClientNotify(SwModify const& rModify, SfxHint const& rHint)
         {
             nPos = static_cast<const SwInsText*>(pNew)->nPos;
             nLen = static_cast<const SwInsText*>(pNew)->nLen;
+            if (m_pMergedPara)
+            {
+                UpdateMergedParaForInsert(*m_pMergedPara, rNode, nPos, nLen);
+            }
             if( IsIdxInside( nPos, nLen ) )
             {
                 if( !nLen )
@@ -1383,20 +1497,33 @@ void SwTextFrame::SwClientNotify(SwModify const& rModify, SfxHint const& rHint)
         case RES_DEL_CHR:
         {
             nPos = static_cast<const SwDelChr*>(pNew)->nPos;
-            InvalidateRange( SwCharRange(nPos, TextFrameIndex(1)), -1 );
+            bool bDeleted(true);
+            if (m_pMergedPara)
+            {
+                bDeleted = UpdateMergedParaForDelete(*m_pMergedPara, rNode, nPos, 1);
+            }
             lcl_SetWrong( *this, nPos, -1, true );
-            lcl_SetScriptInval( *this, nPos );
-            bSetFieldsDirty = bRecalcFootnoteFlag = true;
-            if( HasFollow() )
-                lcl_ModifyOfst( this, nPos, COMPLETE_STRING );
+            if (bDeleted)
+            {
+                InvalidateRange( SwCharRange(nPos, TextFrameIndex(1)), -1 );
+                lcl_SetScriptInval( *this, nPos );
+                bSetFieldsDirty = bRecalcFootnoteFlag = true;
+                if (HasFollow())
+                    lcl_ModifyOfst( this, nPos, COMPLETE_STRING );
+            }
         }
         break;
         case RES_DEL_TXT:
         {
             nPos = static_cast<const SwDelText*>(pNew)->nStart;
             nLen = static_cast<const SwDelText*>(pNew)->nLen;
+            bool bDeleted(true);
+            if (m_pMergedPara)
+            {   // update merged before doing anything else
+                bDeleted = UpdateMergedParaForDelete(*m_pMergedPara, rNode, nPos, nLen);
+            }
             const sal_Int32 m = -nLen;
-            if( IsIdxInside( nPos, nLen ) )
+            if (bDeleted && IsIdxInside(nPos, nLen))
             {
                 if( !nLen )
                     InvalidateSize();
@@ -1404,10 +1531,13 @@ void SwTextFrame::SwClientNotify(SwModify const& rModify, SfxHint const& rHint)
                     InvalidateRange( SwCharRange(nPos, TextFrameIndex(1)), m );
             }
             lcl_SetWrong( *this, nPos, m, true );
-            lcl_SetScriptInval( *this, nPos );
-            bSetFieldsDirty = bRecalcFootnoteFlag = true;
-            if( HasFollow() )
-                lcl_ModifyOfst( this, nPos, nLen );
+            if (bDeleted)
+            {
+                lcl_SetScriptInval( *this, nPos );
+                bSetFieldsDirty = bRecalcFootnoteFlag = true;
+                if (HasFollow())
+                    lcl_ModifyOfst( this, nPos, nLen );
+            }
         }
         break;
         case RES_UPDATE_ATTR:
